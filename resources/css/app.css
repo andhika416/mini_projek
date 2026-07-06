@@ -16,6 +16,7 @@
     .btn-danger { @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50; }
     .form-label { @apply mb-2 block text-sm font-semibold text-slate-700; }
     .form-input { @apply block w-full rounded-xl border-slate-200 bg-white text-sm shadow-sm transition focus:border-teal-500 focus:ring-teal-500; }
+    .filter-select { @apply form-input appearance-none bg-none pr-10 font-medium text-slate-700; }
     .form-error { @apply mt-1.5 text-xs text-rose-600; }
     .badge { @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold; }
 }

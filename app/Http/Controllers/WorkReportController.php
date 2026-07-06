@@ -135,6 +135,15 @@ class WorkReportController extends Controller
             ->download($workReport->attachment_path, $workReport->attachment_name);
     }
 
+    public function previewAttachment(WorkReport $workReport)
+    {
+        $this->authorize('view', $workReport);
+        abort_unless($workReport->attachment_path, 404);
+
+        return Storage::disk(config('filesystems.reports_disk'))
+            ->response($workReport->attachment_path, $workReport->attachment_name);
+    }
+
     private function filteredQuery(Request $request)
     {
         $query = WorkReport::query()->with('user');

@@ -20,7 +20,29 @@
                 <section class="rounded-xl border border-slate-200 p-4">
                     <h2 class="text-sm font-bold text-slate-800">File Kerja</h2>
                     @if($workReport->attachment_path)
-                        <div class="mt-2 flex flex-wrap items-center justify-between gap-3"><p class="break-all text-sm text-slate-600">{{ $workReport->attachment_name }}</p><a href="{{ route('work-reports.attachment', $workReport) }}" class="text-sm font-semibold text-teal-700">Unduh file</a></div>
+                        <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+                            <p class="min-w-0 break-all text-sm text-slate-600">{{ $workReport->attachment_name }}</p>
+                            <div class="flex shrink-0 items-center gap-1">
+                                <a
+                                    href="{{ route('work-reports.attachment.preview', $workReport) }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-teal-700 transition hover:bg-teal-50"
+                                    title="Preview file"
+                                    aria-label="Preview file kerja"
+                                >
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.8"/></svg>
+                                </a>
+                                <a
+                                    href="{{ route('work-reports.attachment', $workReport) }}"
+                                    class="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+                                    title="Unduh file"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                                    Unduh
+                                </a>
+                            </div>
+                        </div>
                     @else
                         <p class="mt-2 text-sm text-slate-400">Tidak ada file dilampirkan.</p>
                     @endif

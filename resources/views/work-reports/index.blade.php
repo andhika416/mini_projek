@@ -16,24 +16,30 @@
         <div class="grid gap-3 border-b border-slate-100 p-4 md:grid-cols-[1fr_auto]">
             <div class="relative">
                 <svg class="absolute left-3 top-3 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                <input id="report-search" type="search" class="form-input pl-9" placeholder="Cari uraian, tanggal, atau pengguna...">
+                <input id="report-search" type="search" class="form-input h-12 pl-9" placeholder="Cari uraian, tanggal, atau pengguna...">
             </div>
-            <form method="GET" class="flex flex-wrap gap-2" x-data="{ loading: false }" @submit="loading = true">
-                <select name="month" class="form-input w-auto" aria-label="Bulan" @change="loading = true; $el.form.submit()">
-                    <option value="">Semua bulan</option>
-                    @foreach(range(1, 12) as $month)
-                        <option value="{{ $month }}" @selected(request('month') == $month)>{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}</option>
-                    @endforeach
-                </select>
-                <select name="year" class="form-input w-auto" aria-label="Tahun" @change="loading = true; $el.form.submit()">
-                    <option value="">Semua tahun</option>
-                    @foreach(range(now()->year, now()->year - 5) as $year)<option value="{{ $year }}" @selected(request('year') == $year)>{{ $year }}</option>@endforeach
-                </select>
+            <form method="GET" class="flex flex-wrap items-center gap-2" x-data="{ loading: false }" @submit="loading = true">
+                <div class="relative min-w-0 flex-1 sm:w-44 sm:flex-none">
+                    <select name="month" class="filter-select h-12" aria-label="Bulan" @change="loading = true; $el.form.submit()">
+                        <option value="">Semua bulan</option>
+                        @foreach(range(1, 12) as $month)
+                            <option value="{{ $month }}" @selected(request('month') == $month)>{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}</option>
+                        @endforeach
+                    </select>
+                    <svg class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m7 10 5 5 5-5"/></svg>
+                </div>
+                <div class="relative min-w-0 flex-1 sm:w-44 sm:flex-none">
+                    <select name="year" class="filter-select h-12" aria-label="Tahun" @change="loading = true; $el.form.submit()">
+                        <option value="">Semua tahun</option>
+                        @foreach(range(now()->year, now()->year - 5) as $year)<option value="{{ $year }}" @selected(request('year') == $year)>{{ $year }}</option>@endforeach
+                    </select>
+                    <svg class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m7 10 5 5 5-5"/></svg>
+                </div>
                 <span x-cloak x-show="loading" class="inline-flex items-center gap-2 px-2 text-xs font-medium text-teal-700">
                     <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z"/></svg>
                     Memuat
                 </span>
-                @if(request()->hasAny(['month','year']))<a href="{{ route('work-reports.index') }}" class="btn-secondary">Reset</a>@endif
+                @if(request()->hasAny(['month','year']))<a href="{{ route('work-reports.index') }}" class="btn-secondary h-12 w-full sm:w-44">Reset</a>@endif
             </form>
         </div>
         <div class="overflow-x-auto">

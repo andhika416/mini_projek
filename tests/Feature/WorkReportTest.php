@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\WorkReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class WorkReportTest extends TestCase
@@ -62,5 +63,22 @@ class WorkReportTest extends TestCase
             ->get(route('work-reports.pdf', $report))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_user_can_preview_their_attachment_inline(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('work-reports/evidence.pdf', '%PDF-1.4 test');
+
+        $user = User::factory()->create();
+        $report = WorkReport::factory()->for($user)->create([
+            'attachment_path' => 'work-reports/evidence.pdf',
+            'attachment_name' => 'evidence.pdf',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('work-reports.attachment.preview', $report))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'inline; filename=evidence.pdf');
     }
 }

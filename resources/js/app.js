@@ -8,10 +8,75 @@ import 'leaflet/dist/leaflet.css';
 
 window.Alpine = Alpine;
 
+Alpine.data('counter', (target, duration = 1000) => ({
+    current: 0,
+    target: Number(target) || 0,
+    formatter: new Intl.NumberFormat('id-ID'),
+
+    init() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            this.current = this.target;
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries[0].isIntersecting) return;
+
+            observer.disconnect();
+            this.animate();
+        }, { threshold: 0.4 });
+
+        observer.observe(this.$el);
+    },
+
+    animate() {
+        const startedAt = performance.now();
+
+        const update = (timestamp) => {
+            const progress = Math.min((timestamp - startedAt) / duration, 1);
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            this.current = Math.round(this.target * easedProgress);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                this.current = this.target;
+            }
+        };
+
+        requestAnimationFrame(update);
+    },
+}));
+
+Alpine.data('liveClock', (timeZone = 'Asia/Jakarta') => ({
+    time: '',
+    timer: null,
+
+    init() {
+        this.update();
+        this.timer = window.setInterval(() => this.update(), 1000);
+    },
+
+    update() {
+        this.time = new Intl.DateTimeFormat('id-ID', {
+            timeZone,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        }).format(new Date());
+    },
+
+    destroy() {
+        window.clearInterval(this.timer);
+    },
+}));
+
 Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeLocationMap();
+    initializeReportChart();
 
     const table = document.querySelector('#reports-table');
     if (!table) return;
@@ -43,6 +108,127 @@ document.addEventListener('DOMContentLoaded', () => {
         dataTable.page.len(Number(event.target.value)).draw();
     });
 });
+
+async function initializeReportChart() {
+    const canvas = document.querySelector('#report-chart');
+    if (!canvas) return;
+
+    const { default: Chart } = await import('chart.js/auto');
+    const labels = JSON.parse(canvas.dataset.labels || '[]');
+    const values = JSON.parse(canvas.dataset.values || '[]');
+    const context = canvas.getContext('2d');
+    const gradient = context.createLinearGradient(0, 0, 0, 320);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lineRevealPlugin = {
+        id: 'lineReveal',
+        beforeInit(chart) {
+            chart.$lineRevealProgress = reducedMotion ? 1 : 0;
+        },
+        beforeDatasetsDraw(chart) {
+            if (chart.$lineRevealProgress >= 1) return;
+
+            const { left, right, top, bottom } = chart.chartArea;
+            chart.ctx.save();
+            chart.ctx.beginPath();
+            chart.ctx.rect(
+                left - 10,
+                top - 10,
+                (right - left + 20) * chart.$lineRevealProgress,
+                bottom - top + 20,
+            );
+            chart.ctx.clip();
+        },
+        afterDatasetsDraw(chart) {
+            if (chart.$lineRevealProgress < 1) {
+                chart.ctx.restore();
+            }
+        },
+        afterRender(chart) {
+            if (reducedMotion || chart.$lineRevealStarted) return;
+
+            chart.$lineRevealStarted = true;
+            const startedAt = performance.now();
+            const duration = 1250;
+
+            const reveal = (timestamp) => {
+                const progress = Math.min((timestamp - startedAt) / duration, 1);
+                chart.$lineRevealProgress = 1 - Math.pow(1 - progress, 4);
+                chart.draw();
+
+                if (progress < 1) requestAnimationFrame(reveal);
+            };
+
+            requestAnimationFrame(reveal);
+        },
+    };
+    gradient.addColorStop(0, 'rgba(20, 184, 166, 0.28)');
+    gradient.addColorStop(1, 'rgba(20, 184, 166, 0.02)');
+
+    new Chart(context, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Laporan dibuat',
+                data: values,
+                backgroundColor: gradient,
+                borderColor: '#0f9488',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.38,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#0f9488',
+                pointBorderWidth: 3,
+                pointHoverBackgroundColor: '#0f9488',
+                pointHoverBorderColor: '#ffffff',
+            }],
+        },
+        plugins: [lineRevealPlugin],
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    displayColors: false,
+                    padding: 12,
+                    callbacks: {
+                        label: (item) => `${item.raw} laporan`,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    border: { display: false },
+                    grid: { display: false },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: 'Poppins', size: 11, weight: 500 },
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...values, 1) + 1,
+                    border: { display: false },
+                    grid: { color: 'rgba(148, 163, 184, 0.16)' },
+                    ticks: {
+                        color: '#94a3b8',
+                        precision: 0,
+                        stepSize: 1,
+                        font: { family: 'Poppins', size: 11 },
+                    },
+                },
+            },
+        },
+    });
+}
 
 function initializeLocationMap() {
     const mapElement = document.querySelector('#location-map');
